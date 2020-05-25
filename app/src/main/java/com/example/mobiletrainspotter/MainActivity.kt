@@ -2,11 +2,14 @@ package com.example.mobiletrainspotter
 
 import android.app.Activity
 import android.content.Intent
+import android.opengl.Visibility
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
@@ -22,11 +25,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // call authentication activity first
-        onStartupShowFirebaseUI()
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        // call authentication activity first
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null)
+            onShowLoginFirebaseUI()
+        else
+            mainMenuCoordinatorLayout.visibility = View.VISIBLE
+
+
+
+
 
         // Initialize Firebase Auth
         auth = Firebase.auth
@@ -36,6 +48,8 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
+
+
     }
 
 
@@ -51,14 +65,28 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> {
-
+                return true
+            }
+            R.id.action_logout -> {
+                onLogoutFirebaseUI()
                 return true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun onStartupShowFirebaseUI() {
+    private fun onLogoutFirebaseUI() {
+        AuthUI.getInstance()
+            .signOut(this)
+            .addOnCompleteListener {
+                // show login screen again
+                onShowLoginFirebaseUI()
+                val user = FirebaseAuth.getInstance().currentUser
+                var test = true
+            }
+    }
+
+    private fun onShowLoginFirebaseUI() {
 
         // Choose authentication providers
         val providers = arrayListOf(
@@ -70,6 +98,7 @@ class MainActivity : AppCompatActivity() {
             AuthUI.getInstance()
                 .createSignInIntentBuilder()
                 .setAvailableProviders(providers)
+                .setIsSmartLockEnabled(false)
                 .build(),
             123)
     }
@@ -83,14 +112,10 @@ class MainActivity : AppCompatActivity() {
 
             if (resultCode == Activity.RESULT_OK) {
                 // Successfully signed in
-                val user = FirebaseAuth.getInstance().currentUser
-                // ...
+                mainMenuCoordinatorLayout.visibility = View.VISIBLE
+                var test = true
             } else {
-                // Sign in failed. If response is null the user canceled the
-                // sign-in flow using the back button. Otherwise check
-                // response.getError().getErrorCode() and handle the error.
-                // ...
-                return
+                onShowLoginFirebaseUI()
             }
         }
     }
