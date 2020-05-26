@@ -9,7 +9,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.LinearLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.mobiletrainspotter.models.Train
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
@@ -17,6 +21,8 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
+import java.time.LocalDateTime
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,9 +45,12 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
         // Initialize Firebase Auth
         auth = Firebase.auth
+
+
+        // adding test data
+        addTestdata()
 
 
         fab.setOnClickListener { view ->
@@ -118,5 +127,29 @@ class MainActivity : AppCompatActivity() {
                 onShowLoginFirebaseUI()
             }
         }
+    }
+
+    private fun addTestdata() {
+        var recycler:RecyclerView = recyclerView
+        recycler.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        var trainList = ArrayList<Train>()
+
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+        trainList.add(Train("", "Zug 4849", "Ein Zug der bei uns faehrt", "no comment", LocalDateTime.MAX  ))
+
+        var adapter = recyclerViewAdapter(trainList)
+        recycler.adapter = adapter
     }
 }
