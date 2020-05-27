@@ -2,4 +2,11 @@ package com.example.mobiletrainspotter.models
 
 import java.time.LocalDateTime
 
-data class Train (val imagePath: String, val name: String, val description: String, val comment: String, val datetime: LocalDateTime)
+data class Train(
+    val imageUrls: ArrayList<String>,
+    val parts: ArrayList<TrainPart>,
+    val location: String,
+    val no: String,
+    val comment: String,
+    val timestamp: LocalDateTime
+)
