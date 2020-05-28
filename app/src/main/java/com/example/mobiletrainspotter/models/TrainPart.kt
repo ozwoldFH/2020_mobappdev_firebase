@@ -1,3 +1,3 @@
 package com.example.mobiletrainspotter.models
 
-data class TrainPart(val model: String, val no: String)
+data class TrainPart(var model: String = "", var no: String = "")

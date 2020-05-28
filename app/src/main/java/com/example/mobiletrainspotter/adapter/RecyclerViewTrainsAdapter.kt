@@ -1,4 +1,4 @@
-package com.example.mobiletrainspotter
+package com.example.mobiletrainspotter.adapter
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -7,14 +7,15 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mobiletrainspotter.R
 import com.example.mobiletrainspotter.models.Train
 import com.squareup.picasso.Picasso
 import java.time.format.DateTimeFormatter
 
-class recyclerViewAdapter(val trainList: ArrayList<Train>, val context: Context) :
-    RecyclerView.Adapter<recyclerViewAdapter.ViewHolder>() {
+class RecyclerViewTrainsAdapter(private val trainList: ArrayList<Train>, private val context: Context) :
+    RecyclerView.Adapter<RecyclerViewTrainsAdapter.ViewHolder>() {
 
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -27,7 +28,7 @@ class recyclerViewAdapter(val trainList: ArrayList<Train>, val context: Context)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        var view = LayoutInflater.from(parent.context).inflate(R.layout.cardview_item, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.train_cardview_item, parent, false)
         return ViewHolder(view)
     }
 
@@ -36,7 +37,7 @@ class recyclerViewAdapter(val trainList: ArrayList<Train>, val context: Context)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        var train: Train = trainList[position]
+        val train: Train = trainList[position]
         setThumbnail(holder, train)
         holder.location.text = train.location
         holder.timestamp.text = train.timestamp.format(formatter)
@@ -44,12 +45,8 @@ class recyclerViewAdapter(val trainList: ArrayList<Train>, val context: Context)
     }
 
     private fun setThumbnail(item: ViewHolder, train: Train) {
-        if (train.imageUrls.size == 0) {
-            val resId = context.resources.getIdentifier("no_image_icon", "drawable", context.packageName)
-            item.thumbImage.setImageResource(resId)
-        } else {
+        if (train.imageUrls.size > 0) {
             Picasso.with(context).load(train.imageUrls[0]).into(item.thumbImage)
-            println("set uri")
         }
     }
 }

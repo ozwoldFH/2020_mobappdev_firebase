@@ -2,32 +2,40 @@ package com.example.mobiletrainspotter
 
 import android.app.Activity
 import android.content.Intent
-import android.opengl.Visibility
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.LinearLayout
-import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mobiletrainspotter.adapter.RecyclerViewTrainPartsAdapter
+import com.example.mobiletrainspotter.adapter.RecyclerViewTrainsAdapter
+import com.example.mobiletrainspotter.helpers.DataBaseHelper
 import com.example.mobiletrainspotter.models.Train
 import com.example.mobiletrainspotter.models.TrainPart
+import com.example.mobiletrainspotter.models.Trains
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
-
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import java.lang.Exception
 import java.time.LocalDateTime
+import java.util.ArrayList
+
 
 class MainActivity : AppCompatActivity() {
+    private val LOGIN_REQUEST_CODE: Int = 123
+    private val ADD_TRAIN_REQUEST_CODE: Int = 124
 
     private lateinit var auth: FirebaseAuth
+
+    private val trains: ArrayList<Train> = arrayListOf()
+    private val trainsAdapter = RecyclerViewTrainsAdapter(trains, this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,21 +51,20 @@ class MainActivity : AppCompatActivity() {
         else
             mainMenuCoordinatorLayout.visibility = View.VISIBLE
 
+        recyclerViewTrains.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        recyclerViewTrains.adapter = trainsAdapter
+
 
         // Initialize Firebase Auth
         auth = Firebase.auth
 
-
-        // adding test data
-        addTestdata()
-
+        // Load data from firebase
+        loadData()
 
         fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
+            val intent: Intent = Intent(this, AddTrainActivity::class.java)
+            startActivityForResult(intent, ADD_TRAIN_REQUEST_CODE)
         }
-
-
     }
 
 
@@ -89,8 +96,6 @@ class MainActivity : AppCompatActivity() {
             .addOnCompleteListener {
                 // show login screen again
                 onShowLoginFirebaseUI()
-                val user = FirebaseAuth.getInstance().currentUser
-                var test = true
             }
     }
 
@@ -109,7 +114,7 @@ class MainActivity : AppCompatActivity() {
                 .setAvailableProviders(providers)
                 .setIsSmartLockEnabled(false)
                 .build(),
-            123
+            LOGIN_REQUEST_CODE
         )
     }
 
@@ -117,7 +122,7 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == 123) {
+        if (requestCode == LOGIN_REQUEST_CODE) {
             val response = IdpResponse.fromResultIntent(data)
 
             if (resultCode == Activity.RESULT_OK) {
@@ -127,15 +132,15 @@ class MainActivity : AppCompatActivity() {
             } else {
                 onShowLoginFirebaseUI()
             }
+        } else if (requestCode == ADD_TRAIN_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                loadData()
+            }
         }
     }
 
-    private fun addTestdata() {
-        var recycler: RecyclerView = recyclerView
-        recycler.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        var trainList = ArrayList<Train>()
-
-        trainList.add(
+    private fun loadData() {
+        val trainList = arrayListOf<Train>(
             Train(
                 arrayListOf("https://www.oebb.at/thumbnails/www.nightjet.com/.imaging/default/dam/reiseportal/bildergalerie-2560x1600/cityjet-eco/eco14.jpg/jcr:content.jpg?t=1574245465322&scale=0.5"),
                 arrayListOf(TrainPart("4746", "049")),
@@ -143,9 +148,7 @@ class MainActivity : AppCompatActivity() {
                 "S398?",
                 "A great train",
                 LocalDateTime.parse("2019-06-29T14:03:18")
-            )
-        )
-        trainList.add(
+            ),
             Train(
                 arrayListOf("https://c1.staticflickr.com/1/646/32395062573_83d3a6272a_b.jpg"),
                 arrayListOf(
@@ -159,9 +162,7 @@ class MainActivity : AppCompatActivity() {
                 "Güterzug",
                 "A legend",
                 LocalDateTime.now()
-            )
-        )
-        trainList.add(
+            ),
             Train(
                 arrayListOf("https://upload.wikimedia.org/wikipedia/commons/8/83/Oesterreich_euro2008lok.jpg"),
                 arrayListOf(TrainPart("1116", "005")),
@@ -169,9 +170,7 @@ class MainActivity : AppCompatActivity() {
                 "",
                 "The instrument",
                 LocalDateTime.parse("2019-08-03T09:51:39")
-            )
-        )
-        trainList.add(
+            ),
             Train(
                 arrayListOf(),
                 arrayListOf(TrainPart("5022", "51")),
@@ -179,9 +178,7 @@ class MainActivity : AppCompatActivity() {
                 "",
                 "The instrument",
                 LocalDateTime.parse("2020-01-22T19:45:03")
-            )
-        )
-        trainList.add(
+            ),
             Train(
                 arrayListOf("https://live.staticflickr.com/1745/41986168665_bbc48ba000_h.jpg"),
                 arrayListOf(
@@ -197,9 +194,25 @@ class MainActivity : AppCompatActivity() {
                 "2x Hercules",
                 LocalDateTime.parse("2018-06-18T17:28:23")
             )
-        )
+        );
 
-        var adapter = recyclerViewAdapter(trainList,this)
-        recycler.adapter = adapter
+        trains.clear()
+        trainsAdapter.notifyDataSetChanged()
+        DataBaseHelper.getTrainsReference()?.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                // Get Post object and use the values to update the UI
+                for (messageSnapshot in dataSnapshot.children) {
+                    val train: Train? = messageSnapshot.getValue(Train::class.java)
+                    if (train != null) {
+                        trains.add(train)
+                        trainsAdapter.notifyItemInserted(trains.size - 1)
+                    }
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                println("loadTrains:onCancelled ${databaseError.toException().message}")
+            }
+        })
     }
 }

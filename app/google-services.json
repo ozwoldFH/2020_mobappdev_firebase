@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "468373508202-vljihat71pnhefsev5rfqs5d9sqks8e3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mobiletrainspotter",
+            "certificate_hash": "d96adcc99a9abfc5325684f85d598aaea567a676"
+          }
+        },
+        {
           "client_id": "468373508202-61kt6c5qmp22rbcgfj6saa6q5rdo6629.apps.googleusercontent.com",
           "client_type": 3
         }
