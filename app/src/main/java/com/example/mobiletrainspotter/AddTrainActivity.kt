@@ -1,6 +1,9 @@
 package com.example.mobiletrainspotter
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.DialogInterface
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -47,8 +50,12 @@ class AddTrainActivity : AppCompatActivity() {
         fabSave.setOnClickListener { _ ->
             val timestamp = getTimestamp()
             if (timestamp == null) {
-                // TODO: add message that timestamp is not valid
-                println("timestamp is not valid")
+                val dialogBuilder = AlertDialog.Builder(this)
+                dialogBuilder.setMessage("Given date or time is not having the right format")
+                    .setTitle("Error")
+                    .setNeutralButton("OK", DialogInterface.OnClickListener { dialog, id -> })
+                    .create()
+                    .show()
                 return@setOnClickListener
             }
 
@@ -61,16 +68,7 @@ class AddTrainActivity : AppCompatActivity() {
                 timestamp
             )
 
-            DataBaseHelper.addTrain(train)?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    setResult(Activity.RESULT_OK)
-                    finish()
-                } else {
-                    println(task.exception)
-                }
-            }
-
-
+            saveTrain(train)
         }
     }
 
@@ -94,6 +92,24 @@ class AddTrainActivity : AppCompatActivity() {
             LocalDateTime.parse("${year}-${month}-${day}T${hour}:${minute}:00")
         } catch (e: Exception) {
             null
+        }
+    }
+
+    private fun saveTrain(train: Train) {
+        DataBaseHelper.addTrain(train)?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                setResult(Activity.RESULT_OK)
+                finish()
+            } else {
+                val message = "${task.exception?.message ?: "<no message>"}\n\nTry again?"
+                val dialogBuilder = AlertDialog.Builder(this)
+                dialogBuilder.setMessage(message)
+                    .setTitle("Error")
+                    .setPositiveButton("Yes", DialogInterface.OnClickListener { dialog, id -> saveTrain(train) })
+                    .setNegativeButton("No", DialogInterface.OnClickListener { dialog, id -> })
+                    .create()
+                    .show()
+            }
         }
     }
 }
