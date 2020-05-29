@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mobiletrainspotter.adapter.RecyclerViewTrainPartsAdapter
 import com.example.mobiletrainspotter.adapter.RecyclerViewTrainsAdapter
 import com.example.mobiletrainspotter.helpers.DataBaseHelper
+import com.example.mobiletrainspotter.helpers.StorageHelper
+import com.example.mobiletrainspotter.helpers.await
 import com.example.mobiletrainspotter.models.Train
 import com.example.mobiletrainspotter.models.TrainPart
 import com.example.mobiletrainspotter.models.Trains
@@ -23,19 +25,25 @@ import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import java.io.InputStream
 import java.lang.Exception
+import java.net.URL
 import java.time.LocalDateTime
-import java.util.ArrayList
+import java.util.*
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private val LOGIN_REQUEST_CODE: Int = 123
     private val ADD_TRAIN_REQUEST_CODE: Int = 124
 
     private lateinit var auth: FirebaseAuth
 
     private val trains: ArrayList<Train> = arrayListOf()
-    private val trainsAdapter = RecyclerViewTrainsAdapter(trains, this)
+    private val trainsAdapter = RecyclerViewTrainsAdapter(trains, this, this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

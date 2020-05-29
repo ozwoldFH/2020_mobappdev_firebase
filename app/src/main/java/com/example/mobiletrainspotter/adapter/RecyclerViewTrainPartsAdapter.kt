@@ -71,8 +71,8 @@ class RecyclerViewTrainPartsAdapter(private val parts: ArrayList<TrainPart>) :
                 parts[0] = TrainPart("", "")
                 notifyItemChanged(0)
             } else {
-                parts.removeAt(position)
-                notifyItemRemoved(position)
+                parts.removeAt(holder.adapterPosition)
+                notifyItemRemoved(holder.adapterPosition)
             }
         }
     }

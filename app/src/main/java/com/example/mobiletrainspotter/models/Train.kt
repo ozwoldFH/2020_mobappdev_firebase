@@ -4,7 +4,7 @@ import com.google.firebase.database.Exclude
 import java.time.LocalDateTime
 
 data class Train(
-    var imageUrls: ArrayList<String> = arrayListOf(),
+    var imageFilenames: ArrayList<String> = arrayListOf(),
     var parts: ArrayList<TrainPart> = arrayListOf(),
     var location: String = "",
     var no: String = "",

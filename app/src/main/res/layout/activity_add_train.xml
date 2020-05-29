@@ -49,34 +49,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="2dp"
-                android:text="Date (DD.MM.YYYY)"
-                android:textColor="@color/colorAccent"
-                android:textSize="24sp"/>
-            <EditText
-                android:id="@+id/editTextDate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="date"
-                android:textColor="@color/fui_bgGoogle"/>
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="2dp"
-                android:text="Time (HH:MM)"
-                android:textColor="@color/colorAccent"
-                android:textSize="24sp"/>
-            <EditText
-                android:id="@+id/editTextTime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="time"
-                android:textColor="@color/fui_bgGoogle"/>
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="2dp"
                 android:text="Parts"
                 android:textColor="@color/colorAccent"
                 android:textSize="24sp"/>
@@ -115,16 +87,52 @@
                     android:layout_height="wrap_content"
                     android:text="Add"/>
             <TextView
+                android:id="@+id/textViewImages"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="2dp"
                 android:text="Images"
                 android:textColor="@color/colorAccent"
                 android:textSize="24sp"/>
+            <TextView
+                android:id="@+id/textViewNoImages"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="5dp"
+                android:text="No Images"
+                android:textColor="@color/fui_bgGoogle"/>
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerViewImages"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="2dp"
+                android:text="Date (DD.MM.YYYY)"
+                android:textColor="@color/colorAccent"
+                android:textSize="24sp"/>
+            <EditText
+                android:id="@+id/editTextDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="date"
+                android:textColor="@color/fui_bgGoogle"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="2dp"
+                android:text="Time (HH:MM)"
+                android:textColor="@color/colorAccent"
+                android:textSize="24sp"/>
+            <EditText
+                android:id="@+id/editTextTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="time"
+                android:textColor="@color/fui_bgGoogle"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

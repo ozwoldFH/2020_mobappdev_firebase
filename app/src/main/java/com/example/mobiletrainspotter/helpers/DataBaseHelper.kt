@@ -7,12 +7,24 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 
 object DataBaseHelper {
-    public fun getTrainsReference(): DatabaseReference? {
+    fun getTrainsReference(): DatabaseReference? {
         val user = FirebaseAuth.getInstance().currentUser ?: return null
         return FirebaseDatabase.getInstance().reference.child("users").child(user.uid).child("trains")
     }
 
-    public fun addTrain(train: Train): Task<Void>? {
+    fun addTrain(train: Train): Task<Void>? {
         return getTrainsReference()?.push()?.setValue(train)
+    }
+
+    fun getTrainReference(trainId: String): DatabaseReference? {
+        return getTrainsReference()?.child(trainId)
+    }
+
+    fun setTrain(trainId: String, train: Train): Task<Void>? {
+        return getTrainReference(trainId)?.setValue(train)
+    }
+
+    fun deleteTrain(trainId: String): Task<Void>? {
+        return getTrainReference(trainId)?.removeValue()
     }
 }
