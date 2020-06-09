@@ -100,8 +100,8 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                         )
 
                         saveTrainInDatabase(train)
-
-                        setResult(Activity.RESULT_OK)
+                        val intent = Intent().putExtra("trainData", train)
+                        setResult(Activity.RESULT_OK, intent)
                         finish()
                     } catch (e: Exception) {
                         deleteImages(uploadedFilenames)

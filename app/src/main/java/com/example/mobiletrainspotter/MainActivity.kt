@@ -136,13 +136,14 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             if (resultCode == Activity.RESULT_OK) {
                 // Successfully signed in
                 mainMenuCoordinatorLayout.visibility = View.VISIBLE
-                var test = true
+                loadData()
             } else {
                 onShowLoginFirebaseUI()
             }
         } else if (requestCode == ADD_TRAIN_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                loadData()
+                var trainData = intent.getSerializableExtra("trainData") as Train
+                addTrainToList(trainData);
             }
         }
     }
@@ -166,5 +167,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 println("loadTrains:onCancelled ${databaseError.toException().message}")
             }
         })
+    }
+
+    private fun addTrainToList(train: Train) {
+        trains.add(train)
+        trainsAdapter.notifyItemInserted(trains.size - 1)
     }
 }
