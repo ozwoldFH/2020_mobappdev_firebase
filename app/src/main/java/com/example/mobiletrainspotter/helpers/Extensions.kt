@@ -1,29 +1,17 @@
 package com.example.mobiletrainspotter.helpers
 
 import com.google.android.gms.tasks.Task
-import java.lang.Exception
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 
 fun <TResult> Continuation<TResult>.await(task: Task<TResult>) {
-    task.addOnCompleteListener { _ ->
-        when {
-            task.result != null -> {
-                this.resume(task.result!!)
-            }
-            task.isSuccessful -> {
-                (this as Continuation<Void?>).resume(null)
-            }
-            task.isCanceled -> {
-                this.resumeWithException(task.exception!!)
-            }
-            else -> {
-                this.resumeWithException(Exception("Task is not successful or cancel"))
-            }
-        }
+    task.addOnSuccessListener {
+        if (it != null) this.resume(it)
+        else (this as Continuation<Void?>).resume(null)
+    }.addOnFailureListener {
+        this.resumeWith(Result.failure(it))
     }
 }
 

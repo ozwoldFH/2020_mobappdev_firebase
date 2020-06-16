@@ -9,17 +9,13 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mobiletrainspotter.R
 import com.example.mobiletrainspotter.helpers.StorageHelper
-import com.example.mobiletrainspotter.helpers.await
 import com.example.mobiletrainspotter.models.Train
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 class RecyclerViewTrainsAdapter(
     private val trainList: ArrayList<Train>,
-    private val context: Context,
-    private val coroutineScope: CoroutineScope
+    private val context: Context
 ) :
     RecyclerView.Adapter<RecyclerViewTrainsAdapter.ViewHolder>() {
 
@@ -55,9 +51,8 @@ class RecyclerViewTrainsAdapter(
     private fun setThumbnail(item: ViewHolder, train: Train) {
         if (train.imageFilenames.size > 0) {
             val filename = train.imageFilenames[0]
-            coroutineScope.launch {
-                val url = StorageHelper.getImageDownloadUrl(filename).await()
-                Picasso.with(context).load(url).into(item.thumbImage)
+            StorageHelper.getImageDownloadUrl(filename).addOnSuccessListener {
+                Picasso.with(context).load(it!!).into(item.thumbImage)
             }
         }
     }

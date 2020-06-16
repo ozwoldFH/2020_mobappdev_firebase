@@ -9,41 +9,36 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.mobiletrainspotter.adapter.RecyclerViewTrainPartsAdapter
 import com.example.mobiletrainspotter.adapter.RecyclerViewTrainsAdapter
 import com.example.mobiletrainspotter.helpers.DataBaseHelper
 import com.example.mobiletrainspotter.helpers.StorageHelper
 import com.example.mobiletrainspotter.helpers.await
 import com.example.mobiletrainspotter.models.Train
-import com.example.mobiletrainspotter.models.TrainPart
-import com.example.mobiletrainspotter.models.Trains
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.ktx.Firebase
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import java.io.InputStream
-import java.lang.Exception
-import java.net.URL
+import kotlinx.coroutines.*
 import java.time.LocalDateTime
 import java.util.*
 
 
-class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
+class MainActivity : AppCompatActivity() {
     private val LOGIN_REQUEST_CODE: Int = 123
     private val ADD_TRAIN_REQUEST_CODE: Int = 124
 
     private lateinit var auth: FirebaseAuth
 
     private val trains: ArrayList<Train> = arrayListOf()
-    private val trainsAdapter = RecyclerViewTrainsAdapter(trains, this, this)
+    private val trainsAdapter = RecyclerViewTrainsAdapter(trains, this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +67,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         fab.setOnClickListener { view ->
             val intent: Intent = Intent(this, AddTrainActivity::class.java)
             startActivityForResult(intent, ADD_TRAIN_REQUEST_CODE)
+        }
+
+        val scope = CoroutineScope(Dispatchers.Default + Job())
+        scope.launch {
+            try {
+                val url = StorageHelper.getImageDownloadUrl("filenaWme").await();
+            } catch (e: Exception) {
+                println("Test error2: ${e.message}")
+            }
         }
     }
 
@@ -141,9 +145,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 onShowLoginFirebaseUI()
             }
         } else if (requestCode == ADD_TRAIN_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                var trainData = intent.getSerializableExtra("trainData") as Train
-                addTrainToList(trainData);
+            if (data != null && resultCode == Activity.RESULT_OK) {
+                val json = data.getStringExtra("trainData")
+                if (json != null) {
+                    val train = Gson().fromJson(json, Train::class.java)
+                    addTrainToList(train);
+                }
             }
         }
     }
@@ -156,10 +163,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 // Get Post object and use the values to update the UI
                 for (messageSnapshot in dataSnapshot.children) {
                     val train: Train? = messageSnapshot.getValue(Train::class.java)
-                    if (train != null) {
-                        trains.add(train)
-                        trainsAdapter.notifyItemInserted(trains.size - 1)
-                    }
+                    if (train != null) addTrainToList(train)
                 }
             }
 

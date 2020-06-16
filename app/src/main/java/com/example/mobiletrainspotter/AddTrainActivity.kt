@@ -17,6 +17,7 @@ import com.example.mobiletrainspotter.adapter.RecyclerViewTrainPartsAdapter
 import com.example.mobiletrainspotter.helpers.*
 import com.example.mobiletrainspotter.models.Train
 import com.example.mobiletrainspotter.models.TrainPart
+import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_train.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
@@ -71,7 +72,7 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             }
         }
 
-        fabSave.setOnClickListener { _ ->
+        fabSave.setOnClickListener { fab ->
             val timestamp = getTimestamp()
             if (timestamp == null) {
                 AlertDialogHelper.show(
@@ -82,38 +83,13 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 )
             } else {
                 launch {
-                    val uploadedFilenames: ArrayList<String> = arrayListOf()
-
-                    try {
-                        for (image in images) {
-                            val filename = uploadImage(image)
-                            if (filename != null) uploadedFilenames.add(filename)
-                        }
-
-                        val train = Train(
-                            uploadedFilenames,
-                            parts,
-                            editTextLocation.text.toString(),
-                            editTextNo.text.toString(),
-                            editTextComment.text.toString(),
-                            timestamp
-                        )
-
-                        saveTrainInDatabase(train)
-                        val intent = Intent().putExtra("trainData", train)
-                        setResult(Activity.RESULT_OK, intent)
-                        finish()
-                    } catch (e: Exception) {
-                        deleteImages(uploadedFilenames)
-                    }
+                    fab.isEnabled = false
+                    pbrSpinner.visibility = View.VISIBLE
+                    saveTrain(timestamp)
+                    pbrSpinner.visibility = View.GONE
+                    fab.isEnabled = true
                 }
             }
-        }
-
-        launch {
-            val url = StorageHelper.getImageDownloadUrl("test.jpeg").await()
-
-            println(url)
         }
     }
 
@@ -138,6 +114,42 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         } catch (e: Exception) {
             null
         }
+    }
+
+    private suspend fun saveTrain(timestamp: LocalDateTime) {
+        val train: Train;
+        val uploadedFilenames: ArrayList<String> = arrayListOf()
+        try {
+            for (image in images) {
+                val filename = uploadImage(image)
+                if (filename != null) uploadedFilenames.add(filename)
+            }
+
+            train = Train(
+                uploadedFilenames,
+                parts,
+                editTextLocation.text.toString(),
+                editTextNo.text.toString(),
+                editTextComment.text.toString(),
+                timestamp.toString()
+            )
+
+            saveTrainInDatabase(train)
+        } catch (e: Exception) {
+            deleteImages(uploadedFilenames)
+            AlertDialogHelper.show(
+                this,
+                e.message,
+                "Save train error",
+                "OK"
+            )
+            return
+        }
+
+        val json = Gson().toJson(train)
+        val intent = Intent().putExtra("trainData", json)
+        setResult(Activity.RESULT_OK, intent)
+        finish()
     }
 
     private suspend fun uploadImage(image: Bitmap): String? {
