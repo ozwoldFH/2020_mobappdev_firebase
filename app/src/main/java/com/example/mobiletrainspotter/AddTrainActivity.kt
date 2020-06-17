@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -72,6 +73,7 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             }
         }
 
+        val alertContext = this
         fabSave.setOnClickListener { fab ->
             val timestamp = getTimestamp()
             if (timestamp == null) {
@@ -83,11 +85,16 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 )
             } else {
                 launch {
-                    fab.isEnabled = false
+                    window.setFlags(
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                    )
                     pbrSpinner.visibility = View.VISIBLE
+
                     saveTrain(timestamp)
+
                     pbrSpinner.visibility = View.GONE
-                    fab.isEnabled = true
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                 }
             }
         }
