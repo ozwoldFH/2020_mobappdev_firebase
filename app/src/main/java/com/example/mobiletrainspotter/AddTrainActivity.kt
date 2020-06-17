@@ -18,6 +18,7 @@ import com.example.mobiletrainspotter.adapter.RecyclerViewTrainPartsAdapter
 import com.example.mobiletrainspotter.helpers.*
 import com.example.mobiletrainspotter.models.Train
 import com.example.mobiletrainspotter.models.TrainPart
+import com.example.mobiletrainspotter.models.Trains
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_train.*
 import kotlinx.coroutines.CoroutineScope
@@ -73,7 +74,6 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             }
         }
 
-        val alertContext = this
         fabSave.setOnClickListener { fab ->
             val timestamp = getTimestamp()
             if (timestamp == null) {
@@ -153,9 +153,7 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             return
         }
 
-        val json = Gson().toJson(train)
-        val intent = Intent().putExtra("trainData", json)
-        setResult(Activity.RESULT_OK, intent)
+        setResult(Activity.RESULT_OK)
         finish()
     }
 
@@ -193,7 +191,7 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private suspend fun saveTrainInDatabase(train: Train) {
         while (true) {
             try {
-                DataBaseHelper.addTrain(train)?.await()
+                Trains.add(train)?.await()
                 return
             } catch (e: Exception) {
                 val message = "${e.message ?: "<no message>"}\n\nTry again?"

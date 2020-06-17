@@ -23,7 +23,6 @@ class RecyclerViewImagesAdapter(private val images: ArrayList<Bitmap>) :
         val delete: ImageButton = item.findViewById(R.id.buttonDeleteTrainImage)
 
         var bitmap: Bitmap? = null
-            get() = field
             set(value) {
                 field = value
 
@@ -33,7 +32,7 @@ class RecyclerViewImagesAdapter(private val images: ArrayList<Bitmap>) :
             }
 
         init {
-            image.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            image.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
                 if (bitmap != null) {
                     val height = bitmap!!.height.toDouble() / bitmap!!.width * image.width
                     image.maxHeight = height.toInt()
