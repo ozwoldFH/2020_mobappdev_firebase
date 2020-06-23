@@ -88,30 +88,58 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
             }
         }
 
-        fabSave.setOnClickListener { fab ->
-            val timestamp = getTimestamp()
-            if (timestamp == null) {
-                AlertDialogHelper.show(
-                    this,
-                    "Given date or time is not having the right format",
-                    "Error",
-                    "OK"
-                )
-            } else {
-                launch {
-                    window.setFlags(
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                    )
-                    pbrSpinner.visibility = View.VISIBLE
+        fabSave.setOnClickListener { _ ->
+            launch {
+                trySave()
+            }
+        }
+    }
 
-                    saveTrain(timestamp)
+    override fun onBackPressed() {
+        if (!hasUnsavedChanges()) {
+            setResult(Activity.RESULT_CANCELED)
+            finish()
+            return
+        }
 
-                    pbrSpinner.visibility = View.GONE
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+        val alertContext = this;
+        launch {
+            val result = AlertDialogHelper.showAsync(
+                alertContext,
+                "All changes get lost!",
+                "Unsaved changes",
+                "Save",
+                "Don't Save",
+                "Cancel"
+            )
+            when (result) {
+                AlertDialog.BUTTON_POSITIVE -> {
+                    trySave()
+                }
+                AlertDialog.BUTTON_NEGATIVE -> {
+                    setResult(Activity.RESULT_CANCELED)
+                    finish()
                 }
             }
         }
+    }
+
+    private fun hasUnsavedChanges(): Boolean {
+        if (trainId == null) {
+            return newImages.size > 0 ||
+                    editTextLocation.text.toString() != "" ||
+                    editTextNo.text.toString() != "" ||
+                    editTextComment.text.toString() != ""
+        }
+
+        val timestamp = getTimestamp()
+        val train = Trains[trainId]!!
+        return newImages.size > 0 ||
+                train.imageFilenames.size != oldImages.size ||
+                train.location != editTextLocation.text.toString() ||
+                train.no != editTextNo.text.toString() ||
+                train.comment != editTextComment.text.toString() ||
+                train.rawTimestamp != timestamp?.toString()
     }
 
     private fun getTimestamp(): LocalDateTime? {
@@ -134,6 +162,29 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
             LocalDateTime.parse("${year}-${month}-${day}T${hour}:${minute}:00")
         } catch (e: Exception) {
             null
+        }
+    }
+
+    private suspend fun trySave() {
+        val timestamp = getTimestamp()
+        if (timestamp == null) {
+            AlertDialogHelper.show(
+                this,
+                "Given date or time is not having the right format",
+                "Error",
+                "OK"
+            )
+        } else {
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            )
+            pbrSpinner.visibility = View.VISIBLE
+
+            saveTrain(timestamp)
+
+            pbrSpinner.visibility = View.GONE
+            window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
         }
     }
 

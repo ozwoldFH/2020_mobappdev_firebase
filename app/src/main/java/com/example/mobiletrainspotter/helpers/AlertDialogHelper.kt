@@ -16,6 +16,7 @@ object AlertDialogHelper {
         neutralButtonText: String? = null
     ): Int {
         return suspendCoroutine {
+            var resumed = false
             val dialogBuilder = AlertDialog.Builder(context)
             if (message != null) {
                 dialogBuilder.setMessage(message)
@@ -24,16 +25,31 @@ object AlertDialogHelper {
                 dialogBuilder.setTitle(title)
             }
             if (positiveButtonText != null) {
-                dialogBuilder.setPositiveButton(positiveButtonText) { _, button -> it.resume(button) }
+                dialogBuilder.setPositiveButton(positiveButtonText) { _, button ->
+                    if (!resumed) it.resume(button)
+                    resumed = true
+                }
             }
             if (negativeButtonText != null) {
-                dialogBuilder.setNegativeButton(negativeButtonText) { _, button -> it.resume(button) }
+                dialogBuilder.setNegativeButton(negativeButtonText) { _, button ->
+                    if (!resumed) it.resume(button)
+                    resumed = true
+                }
             }
             if (neutralButtonText != null) {
-                dialogBuilder.setNeutralButton(neutralButtonText) { _, button -> it.resume(button) }
+                dialogBuilder.setNeutralButton(neutralButtonText) { _, button ->
+                    if (!resumed) it.resume(button)
+                    resumed = true
+                }
             }
-            dialogBuilder.setOnCancelListener { _ -> it.resume(-4) }
-            dialogBuilder.setOnDismissListener { _ -> it.resume(-5) }
+            dialogBuilder.setOnCancelListener { _ ->
+                if (!resumed) it.resume(-4)
+                resumed = true
+            }
+            dialogBuilder.setOnDismissListener { _ ->
+                if (!resumed) it.resume(-5)
+                resumed = true
+            }
             dialogBuilder.create().show()
         }
     }
