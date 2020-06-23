@@ -1,6 +1,7 @@
 package com.example.mobiletrainspotter.adapter
 
-import android.content.Context
+import android.app.Activity
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,10 +10,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mobiletrainspotter.R
+import com.example.mobiletrainspotter.ViewTrainImagesActivity
 import com.example.mobiletrainspotter.helpers.StorageHelper
 import com.squareup.picasso.Picasso
 
-class RecyclerViewFileImagesAdapter(private val images: ArrayList<String>, private val context: Context, private val withDeleteButton: Boolean = true) :
+class RecyclerViewFileImagesAdapter(
+    private val images: ArrayList<String>,
+    private val activity: Activity,
+    private val withDeleteButton: Boolean = true
+) :
     RecyclerView.Adapter<RecyclerViewFileImagesAdapter.ViewHolder>() {
 
     var textViewNoImages: TextView? = null
@@ -37,7 +43,14 @@ class RecyclerViewFileImagesAdapter(private val images: ArrayList<String>, priva
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val filename = images[position]
         StorageHelper.getImageDownloadUrl(filename).addOnSuccessListener {
-            Picasso.with(context).load(it).into(holder.image)
+            Picasso.with(activity).load(it).into(holder.image)
+        }
+        holder.image.setOnClickListener {
+            val intent: Intent = Intent(activity, ViewTrainImagesActivity::class.java)
+            intent.putExtra("type", "imageFilenames")
+            intent.putStringArrayListExtra("imageFilenames", images)
+            intent.putExtra("index", holder.adapterPosition)
+            activity.startActivity(intent)
         }
         if (withDeleteButton) {
             holder.delete.setOnClickListener { _ ->
@@ -48,8 +61,7 @@ class RecyclerViewFileImagesAdapter(private val images: ArrayList<String>, priva
                     textViewNoImages!!.visibility = View.VISIBLE
                 }
             }
-        }
-        else {
+        } else {
             holder.delete.visibility = View.GONE
         }
     }

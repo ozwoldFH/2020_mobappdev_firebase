@@ -29,18 +29,11 @@ import java.time.format.DateTimeFormatter
 class TrainDetailActivity : AppCompatActivity() {
 
     private var parts: ArrayList<TrainPart> = arrayListOf()
-    private val partsAdapter = RecyclerViewTrainPartsAdapter(parts, false)
-
-
     private val images: ArrayList<String> = arrayListOf()
-    private val imagesAdapter = RecyclerViewFileImagesAdapter(images, this, false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_train_detail)
-
-        //Trains[holder.adapterPosition]
-        //val textView = findViewById<TextView>(R.id.editTextLocation)
 
         val index = intent.extras?.getInt("trainIndex") ?: return
         val train = Trains[index]
@@ -58,18 +51,15 @@ class TrainDetailActivity : AppCompatActivity() {
             dateDetail.text = convertLocalDateTimeToDate(train.timestamp)
             numberDetail.text = train.no
             timeDetail.text = convertLocalDateTimeToTime(train.timestamp)
-            train.parts.forEach{parts.add(it)}
-            train.imageFilenames.forEach{images.add(it)}
-            if(train.imageFilenames.size != 0) textViewNoImagesDetail.visibility = View.GONE
 
+            if (train.imageFilenames.size != 0) textViewNoImagesDetail.visibility = View.GONE
+
+            recyclerViewPartsDetail.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+            recyclerViewPartsDetail.adapter = RecyclerViewTrainPartsAdapter(train.parts, false)
+
+            recyclerViewImagesDetail.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
+            recyclerViewImagesDetail.adapter = RecyclerViewFileImagesAdapter(train.imageFilenames, this)
         }
-
-        recyclerViewPartsDetail.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        recyclerViewPartsDetail.adapter = partsAdapter
-
-
-        recyclerViewImagesDetail.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
-        recyclerViewImagesDetail.adapter = imagesAdapter
 
         fabEdit.setOnClickListener { _ ->
             val intent: Intent = Intent(this, AddTrainActivity::class.java)
@@ -77,20 +67,18 @@ class TrainDetailActivity : AppCompatActivity() {
             startActivity(intent)
 
         }
-
-
     }
 
     override fun onBackPressed() {
         super.onBackPressed()
     }
 
-    private fun convertLocalDateTimeToDate(timestamp: LocalDateTime) : String {
+    private fun convertLocalDateTimeToDate(timestamp: LocalDateTime): String {
         val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
         return formatter.format(timestamp)
     }
 
-    private fun convertLocalDateTimeToTime(timestamp: LocalDateTime) : String {
+    private fun convertLocalDateTimeToTime(timestamp: LocalDateTime): String {
         val formatter = DateTimeFormatter.ofPattern("hh:mm")
         return formatter.format(timestamp)
     }

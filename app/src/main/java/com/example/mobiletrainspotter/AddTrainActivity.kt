@@ -36,10 +36,9 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
     private val partsAdapter = RecyclerViewTrainPartsAdapter(parts)
 
     private val newImages: ArrayList<Bitmap> = arrayListOf()
-    private val newImagesAdapter = RecyclerViewImagesAdapter(newImages)
+    private val newImagesAdapter = RecyclerViewImagesAdapter(newImages, this)
 
     private val oldImages: ArrayList<String> = arrayListOf()
-    private val oldImagesAdapter = RecyclerViewFileImagesAdapter(oldImages, this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +46,11 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
 
         val train = Trains[trainId]
         if (train != null) {
+            val oldImagesAdapter = RecyclerViewFileImagesAdapter(oldImages, this)
+            oldImagesAdapter.textViewNoImages = textViewNewNoImages
+            recyclerViewOldImages.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
+            recyclerViewOldImages.adapter = oldImagesAdapter
+
             Trains.addOnChangeListener(this)
             Trains.addOnRemoveListener(this)
 
@@ -63,10 +67,6 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
         newImagesAdapter.textViewNoImages = textViewNewNoImages
         recyclerViewNewImages.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
         recyclerViewNewImages.adapter = newImagesAdapter
-
-        oldImagesAdapter.textViewNoImages = textViewNewNoImages
-        recyclerViewOldImages.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
-        recyclerViewOldImages.adapter = oldImagesAdapter
 
         buttonAddPart.setOnClickListener { _ ->
             parts.add(TrainPart())

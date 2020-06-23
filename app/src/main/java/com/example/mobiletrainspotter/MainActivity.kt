@@ -14,7 +14,6 @@ import com.example.mobiletrainspotter.helpers.DataBaseHelper
 import com.example.mobiletrainspotter.models.Trains
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 

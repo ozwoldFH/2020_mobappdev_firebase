@@ -1,5 +1,7 @@
 package com.example.mobiletrainspotter.adapter
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import android.view.LayoutInflater
 import android.view.View
@@ -9,8 +11,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mobiletrainspotter.R
+import com.example.mobiletrainspotter.ViewTrainImagesActivity
+import java.io.ByteArrayOutputStream
 
-class RecyclerViewImagesAdapter(private val images: ArrayList<Bitmap>) :
+class RecyclerViewImagesAdapter(private val images: ArrayList<Bitmap>, private val activity: Activity) :
     RecyclerView.Adapter<RecyclerViewImagesAdapter.ViewHolder>() {
 
     var textViewNoImages: TextView? = null
@@ -34,6 +38,19 @@ class RecyclerViewImagesAdapter(private val images: ArrayList<Bitmap>) :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.image.setImageBitmap(images[position])
+        holder.image.setOnClickListener {
+            val intent: Intent = Intent(activity, ViewTrainImagesActivity::class.java)
+            intent.putExtra("type", "bitmaps")
+            for (i in images.indices) {
+                val stream = ByteArrayOutputStream()
+                images[i].compress(Bitmap.CompressFormat.PNG, 100, stream)
+                val data: ByteArray = stream.toByteArray()
+                intent.putExtra("bitmap$i", data)
+            }
+            intent.putExtra("size", images.size)
+            intent.putExtra("index", holder.adapterPosition)
+            activity.startActivity(intent)
+        }
         holder.delete.setOnClickListener { _ ->
             images.removeAt(holder.adapterPosition)
             notifyItemRemoved(holder.adapterPosition)
