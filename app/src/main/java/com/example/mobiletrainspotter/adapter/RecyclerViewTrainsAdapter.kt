@@ -2,14 +2,17 @@ package com.example.mobiletrainspotter.adapter
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mobiletrainspotter.R
+import com.example.mobiletrainspotter.TrainDetailActivity
 import com.example.mobiletrainspotter.helpers.StorageHelper
 import com.example.mobiletrainspotter.models.*
 import com.squareup.picasso.Picasso
@@ -36,6 +39,7 @@ class RecyclerViewTrainsAdapter(private val context: Context) :
         val timestamp: TextView = item.findViewById(R.id.textViewTimestamp)
         val trainParts: TextView = item.findViewById(R.id.textViewTrainparts)
         val delete: ImageButton = item.findViewById(R.id.buttonDeleteTrain)
+        val cardView: CardView = item.findViewById(R.id.cardViewTrain)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -48,7 +52,7 @@ class RecyclerViewTrainsAdapter(private val context: Context) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val train: Train = Trains[position] ?: return
+        val train: Train = Trains[holder.adapterPosition] ?: return
         setThumbnail(holder, train)
         holder.location.text = train.location
         holder.timestamp.text = train.timestamp.format(formatter)
@@ -63,6 +67,13 @@ class RecyclerViewTrainsAdapter(private val context: Context) :
                 }
                 .create()
                 .show()
+        }
+
+        holder.cardView.setOnClickListener {
+            //Log.d("TrainDetailIntent", "following position was clicked:" + holder.adapterPosition)
+            val intent: Intent = Intent(context, TrainDetailActivity::class.java)
+            intent.putExtra("trainIndex", holder.adapterPosition)
+            context.startActivity(intent)
         }
     }
 

@@ -13,15 +13,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mobiletrainspotter.R
 import com.example.mobiletrainspotter.models.TrainPart
 
-class RecyclerViewTrainPartsAdapter(private val parts: ArrayList<TrainPart>) :
+class RecyclerViewTrainPartsAdapter(private val parts: ArrayList<TrainPart>, private val isReadonly: Boolean = true) :
     RecyclerView.Adapter<RecyclerViewTrainPartsAdapter.ViewHolder>() {
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder.
     class ViewHolder(item: View) : RecyclerView.ViewHolder(item) {
-        private val model: TextView = item.findViewById(R.id.editTextModel)
-        private val no: TextView = item.findViewById(R.id.editTextNo)
+        val model: TextView = item.findViewById(R.id.editTextModel)
+        val no: TextView = item.findViewById(R.id.editTextNo)
         val delete: ImageButton = item.findViewById(R.id.buttonDeletePart)
 
         var part: TrainPart = TrainPart()
@@ -65,15 +65,23 @@ class RecyclerViewTrainPartsAdapter(private val parts: ArrayList<TrainPart>) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.part = parts[position]
 
-        holder.delete.setOnClickListener { _ ->
-            if (parts.size == 1) {
-                // A train without a part does not make sense, so replace the only part left with a new part
-                parts[0] = TrainPart("", "")
-                notifyItemChanged(0)
-            } else {
-                parts.removeAt(holder.adapterPosition)
-                notifyItemRemoved(holder.adapterPosition)
+        if (isReadonly) {
+            holder.delete.setOnClickListener { _ ->
+                if (parts.size == 1) {
+                    // A train without a part does not make sense, so replace the only part left with a new part
+                    parts[0] = TrainPart("", "")
+                    notifyItemChanged(0)
+                } else {
+                    parts.removeAt(holder.adapterPosition)
+                    notifyItemRemoved(holder.adapterPosition)
+                }
             }
         }
+        else {
+            holder.delete.visibility = View.GONE
+            holder.model.isEnabled = false
+            holder.no.isEnabled = false
+        }
+
     }
 }

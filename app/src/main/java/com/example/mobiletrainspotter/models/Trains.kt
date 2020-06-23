@@ -20,6 +20,8 @@ object Trains : ValueEventListener {
 
     operator fun get(key: String?): Train? = map[key]
 
+    fun getKey(index: Int): String? = map.keys.elementAtOrNull(index)
+
     fun set(key: String, train: Train): Task<Void>? {
         return dbTrains?.child(key)?.setValue(train)
     }

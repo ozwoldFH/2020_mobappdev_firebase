@@ -12,7 +12,7 @@ import com.example.mobiletrainspotter.R
 import com.example.mobiletrainspotter.helpers.StorageHelper
 import com.squareup.picasso.Picasso
 
-class RecyclerViewFileImagesAdapter(private val images: ArrayList<String>, private val context: Context) :
+class RecyclerViewFileImagesAdapter(private val images: ArrayList<String>, private val context: Context, private val withDeleteButton: Boolean = true) :
     RecyclerView.Adapter<RecyclerViewFileImagesAdapter.ViewHolder>() {
 
     var textViewNoImages: TextView? = null
@@ -39,13 +39,18 @@ class RecyclerViewFileImagesAdapter(private val images: ArrayList<String>, priva
         StorageHelper.getImageDownloadUrl(filename).addOnSuccessListener {
             Picasso.with(context).load(it).into(holder.image)
         }
-        holder.delete.setOnClickListener { _ ->
-            images.removeAt(holder.adapterPosition)
-            notifyItemRemoved(holder.adapterPosition)
+        if (withDeleteButton) {
+            holder.delete.setOnClickListener { _ ->
+                images.removeAt(holder.adapterPosition)
+                notifyItemRemoved(holder.adapterPosition)
 
-            if (images.size == 0) {
-                textViewNoImages!!.visibility = View.VISIBLE
+                if (images.size == 0) {
+                    textViewNoImages!!.visibility = View.VISIBLE
+                }
             }
+        }
+        else {
+            holder.delete.visibility = View.GONE
         }
     }
 }
