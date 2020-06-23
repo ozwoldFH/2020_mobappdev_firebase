@@ -1,6 +1,6 @@
 package com.example.mobiletrainspotter.adapter
 
-import android.graphics.Bitmap
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,9 +9,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mobiletrainspotter.R
+import com.example.mobiletrainspotter.helpers.StorageHelper
+import com.squareup.picasso.Picasso
 
-class RecyclerViewImagesAdapter(private val images: ArrayList<Bitmap>) :
-    RecyclerView.Adapter<RecyclerViewImagesAdapter.ViewHolder>() {
+class RecyclerViewFileImagesAdapter(private val images: ArrayList<String>, private val context: Context) :
+    RecyclerView.Adapter<RecyclerViewFileImagesAdapter.ViewHolder>() {
 
     var textViewNoImages: TextView? = null
 
@@ -33,7 +35,10 @@ class RecyclerViewImagesAdapter(private val images: ArrayList<Bitmap>) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.image.setImageBitmap(images[position])
+        val filename = images[position]
+        StorageHelper.getImageDownloadUrl(filename).addOnSuccessListener {
+            Picasso.with(context).load(it).into(holder.image)
+        }
         holder.delete.setOnClickListener { _ ->
             images.removeAt(holder.adapterPosition)
             notifyItemRemoved(holder.adapterPosition)

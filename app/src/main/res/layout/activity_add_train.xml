@@ -8,7 +8,10 @@
     android:background="@color/colorPrimaryDark"
     tools:context=".AddTrainActivity">
 
-    <ScrollView android:id="@+id/scrollView2" android:layout_width="match_parent" android:layout_height="match_parent">
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -87,7 +90,7 @@
                     android:layout_height="wrap_content"
                     android:text="Add"/>
             <TextView
-                android:id="@+id/textViewImages"
+                android:id="@+id/textViewNewImages"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="2dp"
@@ -95,16 +98,40 @@
                 android:textColor="@color/colorAccent"
                 android:textSize="24sp"/>
             <TextView
-                android:id="@+id/textViewNoImages"
+                android:id="@+id/textViewNewNoImages"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="5dp"
                 android:text="No Images"
                 android:textColor="@color/fui_bgGoogle"/>
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerViewImages"
+                android:id="@+id/recyclerViewNewImages"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:padding="3dp"/>
+            <TextView
+                android:id="@+id/textViewOldImages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="2dp"
+                android:visibility="gone"
+                android:text="Current Images"
+                android:textColor="@color/colorAccent"
+                android:textSize="24sp"/>
+            <TextView
+                android:id="@+id/textViewOldNoImages"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="5dp"
+                android:visibility="gone"
+                android:text="No Images"
+                android:textColor="@color/fui_bgGoogle"/>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewOldImages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="3dp"
+                android:visibility="gone"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -149,7 +176,7 @@
                 android:textColor="@color/fui_bgGoogle"
             />
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabSave"

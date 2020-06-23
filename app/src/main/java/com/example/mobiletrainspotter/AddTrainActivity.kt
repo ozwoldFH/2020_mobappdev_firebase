@@ -13,46 +13,60 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mobiletrainspotter.adapter.RecyclerViewFileImagesAdapter
 import com.example.mobiletrainspotter.adapter.RecyclerViewImagesAdapter
 import com.example.mobiletrainspotter.adapter.RecyclerViewTrainPartsAdapter
 import com.example.mobiletrainspotter.helpers.*
-import com.example.mobiletrainspotter.models.Train
-import com.example.mobiletrainspotter.models.TrainPart
-import com.example.mobiletrainspotter.models.Trains
-import com.google.gson.Gson
+import com.example.mobiletrainspotter.models.*
 import kotlinx.android.synthetic.main.activity_add_train.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 
-class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
+class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnChangeTrainListener,
+    OnRemoveTrainListener {
     private val REQUEST_IMAGE_CAPTURE = 1
     private val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
+    private val trainId: String? get() = intent.getStringExtra("trainId")
+
     private val parts: ArrayList<TrainPart> = arrayListOf(TrainPart())
     private val partsAdapter = RecyclerViewTrainPartsAdapter(parts)
 
-    private val images: ArrayList<Bitmap> = arrayListOf()
-    private val imagesAdapter = RecyclerViewImagesAdapter(images)
+    private val newImages: ArrayList<Bitmap> = arrayListOf()
+    private val newImagesAdapter = RecyclerViewImagesAdapter(newImages)
+
+    private val oldImages: ArrayList<String> = arrayListOf()
+    private val oldImagesAdapter = RecyclerViewFileImagesAdapter(oldImages, this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_train)
 
-        val now = LocalDateTime.now()
-        editTextDate.setText(now.format(dateFormatter))
-        editTextTime.setText(now.format(timeFormatter))
+        val train = Trains[trainId]
+        if (train != null) {
+            Trains.addOnChangeListener(this)
+            Trains.addOnRemoveListener(this)
+
+            setTrain(train)
+        } else {
+            val timestamp = LocalDateTime.now()
+            editTextDate.setText(timestamp.format(dateFormatter))
+            editTextTime.setText(timestamp.format(timeFormatter))
+        }
 
         recyclerViewParts.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         recyclerViewParts.adapter = partsAdapter
 
-        imagesAdapter.textViewNoImages = textViewNoImages
-        recyclerViewImages.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
-        recyclerViewImages.adapter = imagesAdapter
+        newImagesAdapter.textViewNoImages = textViewNewNoImages
+        recyclerViewNewImages.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
+        recyclerViewNewImages.adapter = newImagesAdapter
+
+        oldImagesAdapter.textViewNoImages = textViewNewNoImages
+        recyclerViewOldImages.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
+        recyclerViewOldImages.adapter = oldImagesAdapter
 
         buttonAddPart.setOnClickListener { _ ->
             parts.add(TrainPart())
@@ -62,8 +76,8 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         val hasCameraFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
         if (!hasCameraFeature) {
             fabAddImage.hide()
-            textViewImages.visibility = View.GONE
-            recyclerViewImages.visibility = View.GONE
+            textViewNewImages.visibility = View.GONE
+            recyclerViewNewImages.visibility = View.GONE
         }
 
         fabAddImage.setOnClickListener { _ ->
@@ -124,16 +138,25 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     private suspend fun saveTrain(timestamp: LocalDateTime) {
-        val train: Train;
         val uploadedFilenames: ArrayList<String> = arrayListOf()
+        val allFilenames = ArrayList(oldImages)
+        var deletedFilenames: List<String>? = null
+
+        if (trainId != null) {
+            val train = Trains[trainId]
+            if (train != null) deletedFilenames = train.imageFilenames.filter { !allFilenames.contains(it) }
+        }
         try {
-            for (image in images) {
+            for (image in newImages) {
                 val filename = uploadImage(image)
-                if (filename != null) uploadedFilenames.add(filename)
+                if (filename != null) {
+                    uploadedFilenames.add(filename)
+                    allFilenames.add(filename)
+                }
             }
 
-            train = Train(
-                uploadedFilenames,
+            val train = Train(
+                allFilenames,
                 parts,
                 editTextLocation.text.toString(),
                 editTextNo.text.toString(),
@@ -141,7 +164,7 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 timestamp.toString()
             )
 
-            saveTrainInDatabase(train)
+            saveTrainInDatabase(trainId, train)
         } catch (e: Exception) {
             deleteImages(uploadedFilenames)
             AlertDialogHelper.show(
@@ -152,6 +175,8 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             )
             return
         }
+
+        if (deletedFilenames != null) deleteImages(deletedFilenames)
 
         setResult(Activity.RESULT_OK)
         finish()
@@ -182,16 +207,17 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         }
     }
 
-    private suspend fun deleteImages(filenames: ArrayList<String>) {
+    private suspend fun deleteImages(filenames: List<String>) {
         for (filename in filenames) {
             StorageHelper.deleteImage(filename).awaitSuccessfulVoid()
         }
     }
 
-    private suspend fun saveTrainInDatabase(train: Train) {
+    private suspend fun saveTrainInDatabase(trainId: String?, train: Train) {
         while (true) {
             try {
-                Trains.add(train)?.await()
+                if (trainId != null) Trains.set(trainId, train)?.await()
+                else Trains.add(train)?.await()
                 return
             } catch (e: Exception) {
                 val message = "${e.message ?: "<no message>"}\n\nTry again?"
@@ -215,10 +241,60 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             val imageBitmap = data?.extras?.get("data") as Bitmap?
             if (imageBitmap != null) {
-                images.add(imageBitmap)
-                imagesAdapter.notifyItemInserted(images.size - 1)
-                textViewNoImages.visibility = View.GONE
+                newImages.add(imageBitmap)
+                newImagesAdapter.notifyItemInserted(newImages.size - 1)
+                textViewNewNoImages.visibility = View.GONE
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        Trains.removeOnChangeListener(this)
+        Trains.removeOnRemoveListener(this)
+    }
+
+    override fun onChange(newTrain: Train, oldTrain: Train, key: String, index: Int, trains: Trains) {
+        if (key == trainId) setTrain(newTrain)
+    }
+
+    override fun onRemove(train: Train, key: String, index: Int, trains: Trains) {
+        if (key != trainId) return
+
+        val alertContext = this
+        launch {
+            AlertDialogHelper.showAsync(
+                alertContext,
+                "Train got delete somewhere else",
+                "Info",
+                "OK"
+            )
+            setResult(Activity.RESULT_CANCELED)
+            finish()
+        }
+    }
+
+    private fun setTrain(train: Train) {
+        editTextLocation.setText(train.location)
+        editTextNo.setText(train.no)
+        editTextComment.setText(train.comment)
+
+        val timestamp = train.timestamp
+        editTextDate.setText(timestamp.format(dateFormatter))
+        editTextTime.setText(timestamp.format(timeFormatter))
+
+        parts.clear()
+        train.parts.forEach { parts.add(it) }
+        partsAdapter.notifyDataSetChanged()
+
+        oldImages.clear()
+        train.imageFilenames.forEach { oldImages.add(it) }
+        partsAdapter.notifyDataSetChanged()
+
+        textViewNewImages.text = "New Images"
+        textViewOldImages.visibility = View.VISIBLE
+        textViewOldNoImages.visibility = if (train.imageFilenames.size == 0) View.VISIBLE else View.GONE
+        recyclerViewOldImages.visibility = View.VISIBLE
     }
 }
