@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mobiletrainspotter.R
 import com.example.mobiletrainspotter.models.TrainPart
 
-class RecyclerViewTrainPartsAdapter(private val parts: ArrayList<TrainPart>, private val isReadonly: Boolean = true) :
+class RecyclerViewTrainPartsAdapter(private val parts: ArrayList<TrainPart>, private val isReadonly: Boolean = false) :
     RecyclerView.Adapter<RecyclerViewTrainPartsAdapter.ViewHolder>() {
 
     // Provide a reference to the views for each data item
@@ -66,6 +66,10 @@ class RecyclerViewTrainPartsAdapter(private val parts: ArrayList<TrainPart>, pri
         holder.part = parts[position]
 
         if (isReadonly) {
+            holder.delete.visibility = View.GONE
+            holder.model.isEnabled = false
+            holder.no.isEnabled = false
+        } else {
             holder.delete.setOnClickListener { _ ->
                 if (parts.size == 1) {
                     // A train without a part does not make sense, so replace the only part left with a new part
@@ -76,11 +80,6 @@ class RecyclerViewTrainPartsAdapter(private val parts: ArrayList<TrainPart>, pri
                     notifyItemRemoved(holder.adapterPosition)
                 }
             }
-        }
-        else {
-            holder.delete.visibility = View.GONE
-            holder.model.isEnabled = false
-            holder.no.isEnabled = false
         }
 
     }

@@ -144,7 +144,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="5dp"
-                android:text="No Images"
+                android:text="@string/text_no_images"
+                android:textStyle="italic"
                 android:textColor="@color/fui_bgGoogle"/>
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerViewImagesDetail"

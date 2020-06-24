@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mobiletrainspotter.adapter.RecyclerViewTrainsAdapter
 import com.example.mobiletrainspotter.helpers.DataBaseHelper
+import com.example.mobiletrainspotter.models.OnLoadedListener
 import com.example.mobiletrainspotter.models.Trains
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
@@ -18,7 +19,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnLoadedListener {
     private val LOGIN_REQUEST_CODE: Int = 123
     private val ADD_TRAIN_REQUEST_CODE: Int = 124
 
@@ -27,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Trains.addOnLoadedListener(this)
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
@@ -37,10 +39,14 @@ class MainActivity : AppCompatActivity() {
             onShowLoginFirebaseUI()
             return
         } else {
+            pbrTrainsLoadingSpinner.visibility = View.VISIBLE
+            textViewNoTrains.visibility = View.GONE
             Trains.init(DataBaseHelper.getTrainsReference(user))
             mainMenuCoordinatorLayout.visibility = View.VISIBLE
         }
 
+        trainsAdapter.defaultThumbnailResId = resources.getIdentifier("generic_train_white", "drawable", packageName)
+        trainsAdapter.textViewNoTrain = textViewNoTrains
         recyclerViewTrains.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         recyclerViewTrains.adapter = trainsAdapter
 
@@ -50,6 +56,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        Trains.removeOnLoadedListener(this)
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -62,12 +71,9 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> {
-                return true
-            }
             R.id.action_logout -> {
-                Trains.dispose()
                 onLogoutFirebaseUI()
+                Trains.dispose()
                 return true
             }
             else -> super.onOptionsItemSelected(item)
@@ -111,10 +117,17 @@ class MainActivity : AppCompatActivity() {
             if (resultCode == Activity.RESULT_OK && user != null) {
                 // Successfully signed in
                 mainMenuCoordinatorLayout.visibility = View.VISIBLE
+                pbrTrainsLoadingSpinner.visibility = View.VISIBLE
+                textViewNoTrains.visibility = View.GONE
                 Trains.init(DataBaseHelper.getTrainsReference(user))
             } else {
                 onShowLoginFirebaseUI()
             }
         }
+    }
+
+    override fun onLoaded(trains: Trains) {
+        pbrTrainsLoadingSpinner.visibility = View.GONE
+        if (Trains.size == 0) textViewNoTrains.visibility = View.VISIBLE
     }
 }

@@ -30,7 +30,7 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
     private val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-    private val trainId: String? get() = intent.getStringExtra("trainId")
+    private var trainId: String? = null
 
     private val parts: ArrayList<TrainPart> = arrayListOf(TrainPart())
     private val partsAdapter = RecyclerViewTrainPartsAdapter(parts)
@@ -44,10 +44,11 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_train)
 
+        trainId = intent.getStringExtra("trainId")
         val train = Trains[trainId]
         if (train != null) {
             val oldImagesAdapter = RecyclerViewFileImagesAdapter(oldImages, this)
-            oldImagesAdapter.textViewNoImages = textViewNewNoImages
+            oldImagesAdapter.textViewNoImages = textViewOldNoImages
             recyclerViewOldImages.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
             recyclerViewOldImages.adapter = oldImagesAdapter
 
@@ -127,6 +128,9 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
     private fun hasUnsavedChanges(): Boolean {
         if (trainId == null) {
             return newImages.size > 0 ||
+                    parts.size > 1 ||
+                    parts[0].model != "" ||
+                    parts[0].no != "" ||
                     editTextLocation.text.toString() != "" ||
                     editTextNo.text.toString() != "" ||
                     editTextComment.text.toString() != ""
@@ -134,12 +138,19 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
 
         val timestamp = getTimestamp()
         val train = Trains[trainId]!!
-        return newImages.size > 0 ||
-                train.imageFilenames.size != oldImages.size ||
-                train.location != editTextLocation.text.toString() ||
-                train.no != editTextNo.text.toString() ||
-                train.comment != editTextComment.text.toString() ||
-                train.rawTimestamp != timestamp?.toString()
+        if (newImages.size > 0 ||
+            train.imageFilenames.size != oldImages.size ||
+            train.location != editTextLocation.text.toString() ||
+            train.no != editTextNo.text.toString() ||
+            train.comment != editTextComment.text.toString() ||
+            train.rawTimestamp != timestamp?.toString() ||
+            train.parts.size != parts.size
+        ) return true
+
+        for (i in train.parts.indices) {
+            if (train.parts[i] != parts[i]) return true
+        }
+        return false
     }
 
     private fun getTimestamp(): LocalDateTime? {
@@ -306,11 +317,11 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
         Trains.removeOnRemoveListener(this)
     }
 
-    override fun onChange(newTrain: Train, oldTrain: Train, key: String, index: Int, trains: Trains) {
+    override fun onChange(newTrain: Train, oldTrain: Train, key: String, trains: Trains) {
         if (key == trainId) setTrain(newTrain)
     }
 
-    override fun onRemove(train: Train, key: String, index: Int, trains: Trains) {
+    override fun onRemove(train: Train, key: String, trains: Trains) {
         if (key != trainId) return
 
         val alertContext = this
@@ -336,7 +347,7 @@ class AddTrainActivity : AppCompatActivity(), CoroutineScope by MainScope(), OnC
         editTextTime.setText(timestamp.format(timeFormatter))
 
         parts.clear()
-        train.parts.forEach { parts.add(it) }
+        train.parts.forEach { parts.add(TrainPart(it.model, it.no)) }
         partsAdapter.notifyDataSetChanged()
 
         oldImages.clear()

@@ -9,18 +9,16 @@ import com.google.firebase.database.ValueEventListener
 
 object Trains : ValueEventListener {
     private var dbTrains: DatabaseReference? = null
+    private var isLoaded: Boolean = false
     private val map: HashMap<String, Train> = HashMap()
+    private val onLoadedListeners: ArrayList<OnLoadedListener> = arrayListOf()
     private val onAddTrainListeners: ArrayList<OnAddTrainListener> = arrayListOf()
     private val onRemoveTrainListeners: ArrayList<OnRemoveTrainListener> = arrayListOf()
     private val onChangeTrainListeners: ArrayList<OnChangeTrainListener> = arrayListOf()
 
     val size get() = map.size
 
-    operator fun get(index: Int): Train? = map.values.elementAtOrNull(index)
-
     operator fun get(key: String?): Train? = map[key]
-
-    fun getKey(index: Int): String? = map.keys.elementAtOrNull(index)
 
     fun set(key: String, train: Train): Task<Void>? {
         return dbTrains?.child(key)?.setValue(train)
@@ -49,6 +47,7 @@ object Trains : ValueEventListener {
         for (key in ArrayList(map.keys)) {
             removeItem(key)
         }
+        isLoaded = false
     }
 
     override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -67,6 +66,11 @@ object Trains : ValueEventListener {
         for (key in removeTrainKey) {
             removeItem(key)
         }
+
+        if (!isLoaded) {
+            isLoaded = true
+            onLoadedListeners.forEach { it.onLoaded(this) }
+        }
     }
 
     override fun onCancelled(databaseError: DatabaseError) {
@@ -75,23 +79,28 @@ object Trains : ValueEventListener {
 
     private fun addItem(key: String, train: Train) {
         map[key] = train
-        val index = map.values.indexOf(train)
-        onAddTrainListeners.forEach { it.onAdd(train, key, index, this) }
+        onAddTrainListeners.forEach { it.onAdd(train, key, this) }
     }
 
     private fun setItem(key: String, train: Train) {
         val oldTrain = map[key] ?: return
         if (oldTrain == train) return
         map[key] = train
-        val index = map.values.indexOf(train)
-        onChangeTrainListeners.forEach { it.onChange(train, oldTrain, key, index, this) }
+        onChangeTrainListeners.forEach { it.onChange(train, oldTrain, key, this) }
     }
 
     private fun removeItem(key: String) {
         val train = map[key] ?: return
-        val index = map.values.indexOf(train)
         map.remove(key)
-        onRemoveTrainListeners.forEach { it.onRemove(train, key, index, this) }
+        onRemoveTrainListeners.forEach { it.onRemove(train, key, this) }
+    }
+
+    fun addOnLoadedListener(listener: OnLoadedListener) {
+        onLoadedListeners.add(listener)
+    }
+
+    fun removeOnLoadedListener(listener: OnLoadedListener) {
+        onLoadedListeners.remove(listener)
     }
 
     fun addOnAddListener(listener: OnAddTrainListener) {
@@ -119,15 +128,18 @@ object Trains : ValueEventListener {
     }
 }
 
+interface OnLoadedListener {
+    fun onLoaded(trains: Trains)
+}
 
 interface OnAddTrainListener {
-    fun onAdd(train: Train, key: String, index: Int, trains: Trains): Unit
+    fun onAdd(train: Train, key: String, trains: Trains): Unit
 }
 
 interface OnRemoveTrainListener {
-    fun onRemove(train: Train, key: String, index: Int, trains: Trains): Unit
+    fun onRemove(train: Train, key: String, trains: Trains): Unit
 }
 
 interface OnChangeTrainListener {
-    fun onChange(newTrain: Train, oldTrain: Train, key: String, index: Int, trains: Trains): Unit
+    fun onChange(newTrain: Train, oldTrain: Train, key: String, trains: Trains): Unit
 }
