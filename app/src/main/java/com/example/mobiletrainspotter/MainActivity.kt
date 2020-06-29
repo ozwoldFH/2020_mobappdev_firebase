@@ -37,7 +37,6 @@ class MainActivity : AppCompatActivity(), OnLoadedListener {
         val user = FirebaseAuth.getInstance().currentUser
         if (user == null) {
             onShowLoginFirebaseUI()
-            return
         } else {
             pbrTrainsLoadingSpinner.visibility = View.VISIBLE
             textViewNoTrains.visibility = View.GONE
